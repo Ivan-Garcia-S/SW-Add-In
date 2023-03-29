@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "SW-BOM-Add-In": {
+      "commandName": "Project"
+    },
+    "Attach to SW": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\SOLIDWORKS 2021\\SOLIDWORKS\\SLDWORKS.exe"
+    }
+  }
+}
