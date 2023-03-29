@@ -47,7 +47,7 @@ namespace SW_BOM_Add_In
             
 
             Application.ShowMessageBox("disabling main bar");
-            //handle the button click
+            ////handle the button click
             //bool mainVisible = swModel.GetToolbarVisibility(1);
             swModel.SetToolbarVisibility(1, false);
             swApp.RunCommand((int)swCommands_e.swCommands_View_Showhide_Tb, "");//swCommands_Toolbar_Context, "");
