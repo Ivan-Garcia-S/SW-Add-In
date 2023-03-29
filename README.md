@@ -1,1 +1,1 @@
-# SW-BOM-Add-In
+# SW-Add-In
