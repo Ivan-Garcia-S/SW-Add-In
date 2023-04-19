@@ -171,7 +171,7 @@ namespace SW_BOM_Add_In
             */
 
 
-            bool selected = swSelMgr.AddSelectionListObject((Object)compArray[0], null);
+                bool selected = swSelMgr.AddSelectionListObject((Object)compArray[0], null);
                 Debug.WriteLine("selected = " + selected);
 
                 swFeat = (Feature)swSelMgr.GetSelectedObject6(1, 0);
