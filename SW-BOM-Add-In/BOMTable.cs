@@ -118,10 +118,14 @@ namespace SW_BOM_Add_In
             Feature[] selObjs = new Feature[compCount];
             swFeat = (Feature)swModel.FirstFeature();
             string typeName = "";
-            string typeName2 = "";
+            string typeName2 = null;
             string name = "";
 
-            for (int i = 0; i <= 50; i++){
+
+
+           // bool status = swModelDocExt.SelectByID2("piezo master-1", "COMPONENT", 0, 0, 0, false, 0, null, 0);
+
+           /* for (int i = 0; i <= 50; i++){
                 if (swFeat != null){
                     typeName = swFeat.Name;
                     name = swFeat.GetNameForSelection(out typeName2);
@@ -140,16 +144,42 @@ namespace SW_BOM_Add_In
                 }
 
             }
+           */
             Debug.WriteLine("Finished loop");
 
 
+            swAssembly.SelectComponentsBySize(100.0);
 
+            int numComps = swSelMgr.GetSelectedObjectCount2(-1);
 
+            for(int i = 0; i < numComps; i++)
+            {
+                Component2 swComp2 = (Component2)swSelMgr.GetSelectedObject6(i + 1, 0);
+                
+                swAssembly.UnfixComponent();
+                Object mateArray = swComp2.GetMates();
+                IEnumerable<object> mates = (IEnumerable<object>)mateArray;
+                foreach (Mate2 mate in mates)
+                {
+                    Debug.WriteLine("In foreach");
+                    swMateLoadRef = ((Mate2)mate).MateLoadReference;
+                    swModelDocExt.SelectByID2(swMateLoadRef.Name, "MATE", 0, 0, 0, false, 0, null, 0);
+                    bool retVal = swModel.EditSuppress2();
+                    Debug.Assert(retVal);
 
+                }
+                swAssembly.EditAssembly();
 
+                Debug.WriteLine("Name = " + swComp2.Name);
+                swModel.ClearSelection2(false);
+                
+            }
+            //swFeat = (Component2)swSelMgr.GetSelectedObject6(1, 0);
+            
             
 
-            foreach(object comp in components)
+
+            /*foreach (object comp in components)
             {
                 Component2 compObj = (Component2)comp;
                 names[ind] = compObj.Name2;
@@ -162,16 +192,16 @@ namespace SW_BOM_Add_In
                 string featName = names[i];
                 Debug.WriteLine("Featname = " + featName);
             
-            /*
+            
             //swFeat = (Feature)swSelMgr.GetSelectedObject6(i, -1);
             //swFeat.GetNameForSelection(out featType);
-            bool selected = swModelDocExt.SelectByID2(featName, "COMPONENT", 0, 0, 0, false, 0, null, 0);
+            bool selected = swModelDocExt.SelectByID2(featName, "REFERENCE", 0, 0, 0, false, 0, null, 0);
             //swAssembly.UnfixComponent();
             Debug.WriteLine("selected = " + selected);
-            */
+            
 
 
-                bool selected = swSelMgr.AddSelectionListObject((Object)compArray[0], null);
+                ///////bool selected = swSelMgr.AddSelectionListObject((Object)compArray[0], null);
                 Debug.WriteLine("selected = " + selected);
 
                 swFeat = (Feature)swSelMgr.GetSelectedObject6(1, 0);
@@ -187,8 +217,8 @@ namespace SW_BOM_Add_In
                     Debug.Assert(retVal);
                     
                 }
-                swAssembly.EditAssembly();
-
+                swAssembly.EditAssembly();  */
+           
 
                 /*if ( featType == "Mate"){
                     swModel.EditSuppress2();
@@ -204,7 +234,7 @@ namespace SW_BOM_Add_In
                     Debug.WriteLine(featType);
                 }
                 */
-            }
+          //  }
 
         }    
         public override void OnConnect()
