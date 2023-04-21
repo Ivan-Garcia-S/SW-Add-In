@@ -98,6 +98,7 @@ namespace SW_BOM_Add_In
             swConfigMgr.ActiveConfiguration.Lock = true;
             Configuration newConfig = swConfigMgr.AddConfiguration2("Floating config", null, null, 1, null, "Present config", false);
 
+
             Debug.WriteLine("COunt = " + swAssembly.GetComponentCount(true).ToString());
 
             //Object[] parameters = new Object[newConfig.GetParameterCount()];
@@ -112,11 +113,11 @@ namespace SW_BOM_Add_In
             int compCount = swAssembly.GetComponentCount(true);
             string[] names = new string[compCount];
             int ind = 0;
-            selData = swSelMgr.CreateSelectData();
+            //selData = swSelMgr.CreateSelectData();
             Component2[] compArray = new Component2[compCount];
 
             Feature[] selObjs = new Feature[compCount];
-            swFeat = (Feature)swModel.FirstFeature();
+            //swFeat = (Feature)swModel.FirstFeature();
             string typeName = "";
             string typeName2 = null;
             string name = "";
@@ -149,34 +150,93 @@ namespace SW_BOM_Add_In
 
 
             swAssembly.SelectComponentsBySize(100.0);
+            swAssembly.UnfixComponent();
 
+            swAssembly.SelectComponentsBySize(100.0);
             int numComps = swSelMgr.GetSelectedObjectCount2(-1);
-
-            for(int i = 0; i < numComps; i++)
+            Debug.WriteLine("Number of selected components = " + numComps);
+            for(int i = 1; i <= 2; i++)
             {
-                Component2 swComp2 = (Component2)swSelMgr.GetSelectedObject6(i + 1, 0);
+                Debug.WriteLine("in suppress loop");
+                Component2 swComp2 = (Component2)swSelMgr.GetSelectedObject6(1, -1);
+                Debug.WriteLine("Component name = " + swComp2.Name2);
+                Object mateArrayObj = swComp2.GetMates();
                 
-                swAssembly.UnfixComponent();
-                Object mateArray = swComp2.GetMates();
-                IEnumerable<object> mates = (IEnumerable<object>)mateArray;
-                foreach (Mate2 mate in mates)
+                IEnumerable<object> mates = (IEnumerable<object>)mateArrayObj;
+
+                if (mates is not null)
                 {
+                    
+                    Mate2[] mateArray = new Mate2[mates.Count()];
+                    Debug.WriteLine("Mates to suppress = " + mates.Count());
+                    Debug.WriteLine("Number of selected components before suspended list= " + swSelMgr.GetSelectedObjectCount2(-1));
+                    swSelMgr.SuspendSelectionList();
+                    selData = swSelMgr.CreateSelectData();
+                    foreach (Mate2 mate in mates)
+                    {
+                        /////mateArray[cnt++] = mate;
+
+                        bool added = swSelMgr.AddSelectionListObject(mate, selData);
+                        Debug.WriteLine("Added to list= " + added);
+                        swFeat = (Feature)swSelMgr.GetSelectedObject6(i, -1);
+                        Debug.WriteLine("NAME OF MATE IS " + swFeat.Name);
+                        bool status = swModel.SelectedFeatureProperties(0, 0, 0, 0, 0, 0, 0, true, true, swFeat.Name);
+                        swAssembly.EditAssembly();
+                        Debug.WriteLine("suppressed = " + status);
+                        swSelMgr.DeSelect2(1, -1);
+                        Debug.WriteLine("Number of selected components after deselect= " + swSelMgr.GetSelectedObjectCount2(-1));
+                    }
+                    swSelMgr.ResumeSelectionList2(false);
+                    Debug.WriteLine("Number of selected components after resumed list= " + swSelMgr.GetSelectedObjectCount2(-1));
+                    /*swSelMgr.SuspendSelectionList();
+                    int added = swSelMgr.AddSelectionListObjects(mateArray, selData);
+                    for (int j = 1; j <= added; j++)
+                    {
+                        Debug.WriteLine("Number of selected components = " + swSelMgr.GetSelectedObjectCount2(-1));
+                        swFeat = (Feature)swSelMgr.GetSelectedObject6(i, -1);
+                        Debug.WriteLine("name = " + swFeat.Name);
+                        swModelDocExt.SelectByID2(swFeat.Name, "MATE", 0, 0, 0, false, 0, null, 0);
+                        swModel.SelectedFeatureProperties(0, 0, 0, 0, 0, 0, 0, true, true, swFeat.Name);
+                        Debug.WriteLine("Number of selected components = " + swSelMgr.GetSelectedObjectCount2(-1));
+                        swSelMgr.DeSelect2(added + 1, -1);
+                        Debug.WriteLine("Number of selected components after deselect= " + swSelMgr.GetSelectedObjectCount2(-1));
+                    }
+                    
+                   
+
+                    //bool suppressed = swModel.EditSuppress2();
+                  
+                   // Debug.WriteLine("Suppressed = " + suppressed);
+                    //swApp.RunCommand((int)swCommands_e.swCommands_Make_Suppressed, "");
+                    swSelMgr.ResumeSelectionList2(false); */
+
+                }
+                swSelMgr.DeSelect2(1, -1);
+
+                /*foreach (Object mate in mates)
+                {
+                    Mate2 m2 = (Mate2)mate;
                     Debug.WriteLine("In foreach");
-                    swMateLoadRef = ((Mate2)mate).MateLoadReference;
-                    swModelDocExt.SelectByID2(swMateLoadRef.Name, "MATE", 0, 0, 0, false, 0, null, 0);
+                    swMateLoadRef = swAssembly.InsertLoadReference(m2);//((Mate2)mate).MateLoadReference;
+                    swModelDocExt.SelectByID2(swMateLoadRef.Name, "MATE", 0, 0, 0, false, 0, null, 0); 
+                    
+                    
+                    
                     bool retVal = swModel.EditSuppress2();
                     Debug.Assert(retVal);
 
                 }
-                swAssembly.EditAssembly();
+                */
 
-                Debug.WriteLine("Name = " + swComp2.Name);
-                swModel.ClearSelection2(false);
-                
+
+                // Debug.WriteLine("Name = " + swComp2.Name);
+                // swModel.ClearSelection2(false);
+
             }
+            //swAssembly.EditAssembly();
             //swFeat = (Component2)swSelMgr.GetSelectedObject6(1, 0);
-            
-            
+
+
 
 
             /*foreach (object comp in components)
@@ -218,23 +278,23 @@ namespace SW_BOM_Add_In
                     
                 }
                 swAssembly.EditAssembly();  */
-           
 
-                /*if ( featType == "Mate"){
-                    swModel.EditSuppress2();
-                    Debug.WriteLine("Suppressed Mate");
-                }
-                else if(featType == "Part")
-                {
-                    swAssembly.UnfixComponent();
-                    Debug.WriteLine("Unfixed Part");
-                }
-                else
-                {
-                    Debug.WriteLine(featType);
-                }
-                */
-          //  }
+
+            /*if ( featType == "Mate"){
+                swModel.EditSuppress2();
+                Debug.WriteLine("Suppressed Mate");
+            }
+            else if(featType == "Part")
+            {
+                swAssembly.UnfixComponent();
+                Debug.WriteLine("Unfixed Part");
+            }
+            else
+            {
+                Debug.WriteLine(featType);
+            }
+            */
+            //  }
 
         }    
         public override void OnConnect()
