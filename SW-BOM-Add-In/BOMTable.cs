@@ -1,6 +1,7 @@
 ﻿using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swcommands;
 using SolidWorks.Interop.swconst;
+using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -113,7 +114,7 @@ namespace SW_BOM_Add_In
             int compCount = swAssembly.GetComponentCount(true);
             string[] names = new string[compCount];
             int ind = 0;
-            //selData = swSelMgr.CreateSelectData();
+            selData = swSelMgr.CreateSelectData();
             Component2[] compArray = new Component2[compCount];
 
             Feature[] selObjs = new Feature[compCount];
@@ -155,7 +156,7 @@ namespace SW_BOM_Add_In
             swAssembly.SelectComponentsBySize(100.0);
             int numComps = swSelMgr.GetSelectedObjectCount2(-1);
             Debug.WriteLine("Number of selected components = " + numComps);
-            for(int i = 1; i <= 2; i++)
+            for(int i = 1; i <= numComps; i++)
             {
                 Debug.WriteLine("in suppress loop");
                 Component2 swComp2 = (Component2)swSelMgr.GetSelectedObject6(1, -1);
@@ -168,11 +169,34 @@ namespace SW_BOM_Add_In
                 {
                     
                     Mate2[] mateArray = new Mate2[mates.Count()];
+                    int cnt = 0;
+                    foreach (Mate2 mate in mates)
+                    {
+                        mateArray[cnt++] = mate;
+                    }
+
                     Debug.WriteLine("Mates to suppress = " + mates.Count());
                     Debug.WriteLine("Number of selected components before suspended list= " + swSelMgr.GetSelectedObjectCount2(-1));
                     swSelMgr.SuspendSelectionList();
-                    selData = swSelMgr.CreateSelectData();
-                    foreach (Mate2 mate in mates)
+                  
+
+                    
+                    for (int j = 1; j <= mates.Count(); j++)
+                    {
+                        bool added = swSelMgr.AddSelectionListObject(mateArray[j-1], selData);
+                        Debug.WriteLine("Number of selected components after add= " + swSelMgr.GetSelectedObjectCount2(-1));
+                        Debug.WriteLine("Added to list= " + added);
+                        swFeat = (Feature)swSelMgr.GetSelectedObject6(1, -1);
+                        Debug.WriteLine("NAME OF MATE IS " + swFeat.Name);
+                        bool status = swModel.SelectedFeatureProperties(0, 0, 0, 0, 0, 0, 0, true, true, swFeat.Name);
+
+                        Debug.WriteLine("suppressed = " + status);
+                        Debug.WriteLine("Number of selected components after suppressed= " + swSelMgr.GetSelectedObjectCount2(-1));
+
+                    }
+                    swAssembly.EditAssembly();
+                    swSelMgr.ResumeSelectionList2(false);
+                    /*foreach (Mate2 mate in mates)
                     {
                         /////mateArray[cnt++] = mate;
 
@@ -188,12 +212,14 @@ namespace SW_BOM_Add_In
                     }
                     swSelMgr.ResumeSelectionList2(false);
                     Debug.WriteLine("Number of selected components after resumed list= " + swSelMgr.GetSelectedObjectCount2(-1));
+                    */
+
                     /*swSelMgr.SuspendSelectionList();
                     int added = swSelMgr.AddSelectionListObjects(mateArray, selData);
                     for (int j = 1; j <= added; j++)
                     {
                         Debug.WriteLine("Number of selected components = " + swSelMgr.GetSelectedObjectCount2(-1));
-                        swFeat = (Feature)swSelMgr.GetSelectedObject6(i, -1);
+                        swFeat = (Feature)swSelMgr.GetSelectedObject6(j, -1);
                         Debug.WriteLine("name = " + swFeat.Name);
                         swModelDocExt.SelectByID2(swFeat.Name, "MATE", 0, 0, 0, false, 0, null, 0);
                         swModel.SelectedFeatureProperties(0, 0, 0, 0, 0, 0, 0, true, true, swFeat.Name);
