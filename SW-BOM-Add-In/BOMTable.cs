@@ -121,73 +121,34 @@ namespace FORGEX
                 config.Lock = true;
             }
 
-            /*
-            Component2 root = originalConfig.GetRootComponent3(false);
-            Debug.WriteLine("Root name= " + root.Name);
-
-            swModelDocExt.SelectByID2("Default", "CONFIGURATIONS", 0, 0, 0, false, 0, null, 0);//defaultConfig.Select2(false, selData);
-
-            swModel.EditCopy();
-            //swModel.ClearSelection2(true);
-            //swApp.RunCommand((int)swCommands_e.swCommands_Copy, "");
-            //swModelDocExt.SelectByID2("piezo top.SLDASM", "COMPONENT", 0, 0, 0, false, 0, null, 0);//root.Select4(false, selData, false);
-
-            swModel.Paste();
-            //swApp.RunCommand((int)swCommands_e.swCommands_Paste, "");
-            swModel.ClearSelection2(true);
-
-            swModel.ShowConfiguration2("Copy of " + defaultConfig.Name);
-            //Configuration newConfig = swConfigMgr.AddConfiguration2("Floating config #" + numConfigs, null, null, 1, null, "Present config", true);
-            //bool success = swModel.AddConfiguration2("Floating config #" + numConfigs, "", "", true, false, false, true, 256);
-
-            //swConfigMgr.AddConfiguration2("Floating config #" + numConfigs, "", "", 65, "Default", "", false);
-
-            */
-
+            //Create new configuration to be modified
             swModel.AddConfiguration3("Floating config #" + numConfigs, "", "", 65);
-            Configuration activeConfig2 = swConfigMgr.ActiveConfiguration;
-            Debug.WriteLine("New Active config = " + activeConfig2.Name);
-
+            
+            //Get and store all components in the current assembly
             Feature swFeat = default(Feature);
             Object objArray = swAssembly.GetComponents(true);
             IEnumerable<object> components = (IEnumerable<object>)objArray;
             int compCount = swAssembly.GetComponentCount(true);
-            string[] names = new string[compCount];
-            int ind = 0;
-            selData = swSelMgr.CreateSelectData();
-            Component2[] compArray = new Component2[compCount];
-            Feature[] selObjs = new Feature[compCount];
             
-            /*MathTransform[] compTransforms = new MathTransform[compCount];
-            swAssembly.SelectComponentsBySize(100.0);
+            //Create select data for selecting components
+            selData = swSelMgr.CreateSelectData();
 
-            for (int i = 0; i < compCount; i++)
-            {
-                Component2 swComp2 = (Component2)swSelMgr.GetSelectedObject6(1, -1);
-                compTransforms[i] = swComp2.Transform2;
-                swSelMgr.DeSelect2(1, -1);
-                Debug.WriteLine(swComp2.Transform2.ToString());
-            }
-            */
             //Select all components and make them "floating"
             swAssembly.SelectComponentsBySize(100.0);
             swAssembly.UnfixComponent();
 
+            //Get all mates of selected components and suppress each one
             swAssembly.SelectComponentsBySize(100.0);
             int numComps = swSelMgr.GetSelectedObjectCount2(-1);
-           // Debug.WriteLine("Number of selected components = " + numComps);
             for(int i = 1; i <= numComps; i++)
             {
-               // Debug.WriteLine("in suppress loop");
                 Component2 swComp2 = (Component2)swSelMgr.GetSelectedObject6(1, -1);
-                //Debug.WriteLine("Component name = " + swComp2.Name2);
                 Object mateArrayObj = swComp2.GetMates();
-                
                 IEnumerable<object> mates = (IEnumerable<object>)mateArrayObj;
 
+                //Put all mates in array
                 if (mates is not null)
-                {
-                    
+                { 
                     Mate2[] mateArray = new Mate2[mates.Count()];
                     int cnt = 0;
                     foreach (Mate2 mate in mates)
@@ -195,36 +156,29 @@ namespace FORGEX
                         mateArray[cnt++] = mate;
                     }
 
-                   //Debug.WriteLine("Mates to suppress = " + mates.Count());
-                    //Debug.WriteLine("Number of selected components before suspended list= " + swSelMgr.GetSelectedObjectCount2(-1));
+                    //Suspend the current selection list to revisit
                     swSelMgr.SuspendSelectionList();
    
                     for (int j = 1; j <= mates.Count(); j++)
                     {
                         bool added = swSelMgr.AddSelectionListObject(mateArray[j-1], selData);
-                        //Debug.WriteLine("Number of selected components after add= " + swSelMgr.GetSelectedObjectCount2(-1));
-                        //Debug.WriteLine("Added to list= " + added);
                         swFeat = (Feature)swSelMgr.GetSelectedObject6(1, -1);
-                        //Debug.WriteLine("NAME OF MATE IS " + swFeat.Name);
+                        //Update supressed property to true
                         bool status = swModel.SelectedFeatureProperties(0, 0, 0, 0, 0, 0, 0, true, true, swFeat.Name);
-
-                       // Debug.WriteLine("suppressed = " + status);
-                       // Debug.WriteLine("Number of selected components after suppressed= " + swSelMgr.GetSelectedObjectCount2(-1));
-
                     }
+                    //Resume the old selection list
                     swSelMgr.ResumeSelectionList2(false);
 
                 }
                 swSelMgr.DeSelect2(1, -1);
-
             }
+            //Open the assembly for editing again
             swAssembly.EditAssembly();   
 
         }    
         public override void OnConnect()
         {
-            //Create add-in buttons to activate funcitonality in the SW toolbar
-            //this.CommandManager.AddCommandGroup<Toolbar_Toggler>().CommandClick += OnTogglerButtonClick;
+            //Create add-in buttons to activate funcitonality in the SW toolbar and CommandManager tab
             this.CommandManager.AddCommandGroup<FORGEX>().CommandClick += OnButtonClick;
 
             //Setting SW object and ID# variables
@@ -233,7 +187,5 @@ namespace FORGEX
             
         }
         public SldWorks swApp;
-        //Setting SW model variables
-
     }
 }
